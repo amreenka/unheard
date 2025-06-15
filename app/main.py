@@ -2,25 +2,39 @@ import streamlit as st
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Page setup
+st.set_page_config(page_title="Unheard", page_icon="🎵")
+st.title("🎵 Unheard: Discover Your Top Tracks")
+
+# Read Spotify credentials from Streamlit secrets
+client_id = st.secrets["SPOTIPY_CLIENT_ID"]
+client_secret = st.secrets["SPOTIPY_CLIENT_SECRET"]
+redirect_uri = st.secrets["SPOTIPY_REDIRECT_URI"]
 
 # Create Spotify client
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
-    scope="user-top-read",
-    client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-    client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
-    redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI")
-))
-
-# Streamlit UI
-st.title("🎵 Unheard: Your Spotify Top Tracks")
-
 try:
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+        scope="user-top-read",
+        client_id=client_id,
+        client_secret=client_secret,
+        redirect_uri=redirect_uri
+    ))
+
+    # Fetch and display user's top 10 tracks
     results = sp.current_user_top_tracks(limit=10, time_range='short_term')
+    st.subheader("🎧 Your Top 10 Tracks (Short Term):")
+
     for i, item in enumerate(results['items']):
-        st.write(f"{i+1}. {item['name']} by {item['artists'][0]['name']}")
-except:
-    st.warning("Please log in to Spotify and paste the full redirected URL with the code.")
+        name = item['name']
+        artist = item['artists'][0]['name']
+        st.markdown(f"{i+1}. **{name}** by *{artist}*")
+
+except spotipy.exceptions.SpotifyOauthError as e:
+    st.error("⚠️ Spotify login failed. Make sure your redirect URI and secrets are correct.")
+    st.code(str(e))
+
+except Exception as e:
+    st.error("🚨 Something went wrong.")
+    st.code(str(e))
 
