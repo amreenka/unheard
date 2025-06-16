@@ -1,43 +1,52 @@
-from spotipy.oauth2 import SpotifyOAuth
 import streamlit as st
 import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 
 st.set_page_config(page_title="Unheard", page_icon="🎵")
 st.title("🎵 Unheard: Discover Your Top Tracks")
 
+# Spotify credentials
 client_id = st.secrets["SPOTIPY_CLIENT_ID"]
 client_secret = st.secrets["SPOTIPY_CLIENT_SECRET"]
 redirect_uri = st.secrets["SPOTIPY_REDIRECT_URI"]
 
+# OAuth manager
 auth_manager = SpotifyOAuth(
     client_id=client_id,
     client_secret=client_secret,
     redirect_uri=redirect_uri,
-    scope="user-read-private user-top-read"
+    scope="user-top-read user-read-private",
+    show_dialog=True,
 )
 
-# Parse code from URL
+# Get code from query params (no parentheses!)
 query_params = st.query_params
-auth_code = query_params.get("code", [None])[0]
+code = query_params.get("code", [None])[0]
 
-# Show login link if not logged in
-if not auth_code:
+if not code:
     auth_url = auth_manager.get_authorize_url()
-    st.markdown(f"[🔐 Click here to log in to Spotify]({auth_url})")
+    st.markdown(f"[🔐 Log in with Spotify]({auth_url})")
     st.stop()
 
-# Exchange code for token
 try:
-    token_info = auth_manager.get_access_token(auth_code, as_dict=False)
+    token_info = auth_manager.get_access_token(code, as_dict=False)
     sp = spotipy.Spotify(auth=token_info)
 
-    # Success!
     user = sp.current_user()
-    st.success(f"✅ Logged in as {user['display_name']}")
+    st.success(f"Logged in as {user['display_name']}")
     st.image(user["images"][0]["url"], width=150)
 
+    # Display top tracks
+    st.subheader("🎧 Your Top 10 Tracks:")
+    top_tracks = sp.current_user_top_tracks(limit=10)
+
+    for i, item in enumerate(top_tracks['items']):
+        name = item['name']
+        artist = item['artists'][0]['name']
+        st.markdown(f"{i+1}. **{name}** by *{artist}*")
+
 except Exception as e:
-    st.error("⚠️ Spotify auth failed")
+    st.error("⚠️ Spotify login failed or token invalid.")
     st.code(str(e))
     st.stop()
 
