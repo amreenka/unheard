@@ -13,7 +13,7 @@ client_secret = st.secrets["SPOTIPY_CLIENT_SECRET"]
 redirect_uri = st.secrets["SPOTIPY_REDIRECT_URI"]
 
 # Get ?code from URL (for login response)
-query_params = st.query_params()
+query_params = st.query_params
 auth_code = query_params.get("code", [None])[0]
 
 # Spotipy auth manager
