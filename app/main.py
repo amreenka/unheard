@@ -5,22 +5,22 @@ from spotipy.oauth2 import SpotifyOAuth
 st.set_page_config(page_title="Unheard", page_icon="🎵")
 st.title("🎵 Unheard: Discover Your Top Tracks")
 
-# Spotify credentials from secrets
+# Load Spotify credentials from secrets
 client_id = st.secrets["SPOTIPY_CLIENT_ID"]
 client_secret = st.secrets["SPOTIPY_CLIENT_SECRET"]
 redirect_uri = st.secrets["SPOTIPY_REDIRECT_URI"]
 
-# OAuth manager
+# Initialize OAuth
 auth_manager = SpotifyOAuth(
     client_id=client_id,
     client_secret=client_secret,
     redirect_uri=redirect_uri,
     scope="user-top-read user-read-private",
     show_dialog=True,
-    cache_path=None  # disables caching
+    cache_path=None
 )
 
-# Safely get Spotify code from query params
+# Check query parameters for auth code
 query_params = st.query_params
 code = query_params.get("code", [None])[0] if "code" in query_params else None
 
@@ -30,12 +30,8 @@ if not code:
     st.stop()
 
 try:
-    st.write("🔄 Exchanging code for access token...")
-    access_token = auth_manager.get_access_token(code, as_dict=False)
-    st.success("✅ Access token received.")
-
+    access_token = auth_manager.get_access_token(code)  # fixed here
     sp = spotipy.Spotify(auth=access_token)
-    st.success("✅ Spotify client initialized.")
 
     user = sp.current_user()
     st.success(f"Logged in as {user['display_name']}")
