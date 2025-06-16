@@ -5,12 +5,12 @@ from spotipy.oauth2 import SpotifyOAuth
 st.set_page_config(page_title="Unheard", page_icon="🎵")
 st.title("🎵 Unheard: Discover Your Top Tracks")
 
-# Spotify credentials
+# Spotify credentials from Streamlit Cloud secrets
 client_id = st.secrets["SPOTIPY_CLIENT_ID"]
 client_secret = st.secrets["SPOTIPY_CLIENT_SECRET"]
 redirect_uri = st.secrets["SPOTIPY_REDIRECT_URI"]
 
-# OAuth manager
+# Create OAuth manager
 auth_manager = SpotifyOAuth(
     client_id=client_id,
     client_secret=client_secret,
@@ -20,9 +20,10 @@ auth_manager = SpotifyOAuth(
     cache_path=None
 )
 
-# Safely get Spotify code from query params
+# Check query params for Spotify authorization code
 query_params = st.query_params
 code = query_params.get("code", [None])[0] if "code" in query_params else None
+st.write("Authorization code:", code)
 
 if not code:
     auth_url = auth_manager.get_authorize_url()
@@ -30,8 +31,13 @@ if not code:
     st.stop()
 
 try:
-    token_info = auth_manager.get_access_token(code, as_dict=False)
-    sp = spotipy.Spotify(auth=token_info)
+    st.write("Attempting to get access token...")
+    token_info = auth_manager.get_access_token(code)
+    st.success("Access token received!")
+    st.code(token_info)  # Debug: show full token info
+
+    sp = spotipy.Spotify(auth=token_info["access_token"])
+    st.success("Spotify client initialized!")
 
     user = sp.current_user()
     st.success(f"Logged in as {user['display_name']}")
@@ -41,10 +47,10 @@ try:
     st.subheader("🎧 Your Top 10 Tracks:")
     top_tracks = sp.current_user_top_tracks(limit=10)
 
-    for i, item in enumerate(top_tracks['items']):
-        name = item['name']
-        artist = item['artists'][0]['name']
-        st.markdown(f"{i+1}. **{name}** by *{artist}*")
+    for i, item in enumerate(top_tracks["items"]):
+        name = item["name"]
+        artist = item["artists"][0]["name"]
+        st.markdown(f"{i + 1}. **{name}** by *{artist}*")
 
 except Exception as e:
     st.error("⚠️ Spotify login failed or token invalid.")
