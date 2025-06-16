@@ -17,6 +17,7 @@ auth_manager = SpotifyOAuth(
     redirect_uri=redirect_uri,
     scope="user-top-read user-read-private",
     show_dialog=True,
+    cache_path=None
 )
 
 # Safely get Spotify code from query params
