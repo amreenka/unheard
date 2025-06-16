@@ -19,8 +19,9 @@ auth_manager = SpotifyOAuth(
     show_dialog=True,
 )
 
-# Get code from query params (no parentheses!)
-code = st.query_params.get("code", [None])[0]
+# Get query params the RIGHT way
+query_params = st.experimental_get_query_params()
+code = query_params.get("code", [None])[0]
 
 if not code:
     auth_url = auth_manager.get_authorize_url()
@@ -35,7 +36,6 @@ try:
     st.success(f"Logged in as {user['display_name']}")
     st.image(user["images"][0]["url"], width=150)
 
-    # Display top tracks
     st.subheader("🎧 Your Top 10 Tracks:")
     top_tracks = sp.current_user_top_tracks(limit=10)
 
