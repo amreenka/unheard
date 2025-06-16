@@ -7,7 +7,7 @@ import os
 st.set_page_config(page_title="Unheard", page_icon="🎵")
 st.title("🎵 Unheard: Discover Your Top Tracks")
 
-# Read Spotify credentials from Streamlit secrets
+# Load Spotify credentials from Streamlit secrets
 client_id = st.secrets["SPOTIPY_CLIENT_ID"]
 client_secret = st.secrets["SPOTIPY_CLIENT_SECRET"]
 redirect_uri = st.secrets["SPOTIPY_REDIRECT_URI"]
@@ -18,10 +18,11 @@ try:
         scope="user-top-read",
         client_id=client_id,
         client_secret=client_secret,
-        redirect_uri=redirect_uri
+        redirect_uri=redirect_uri,
+        cache_path=".spotifycache",     # ✅ Fix: Save token in a safe location
+        show_dialog=True                # ✅ Fix: Ensure login appears every time
     ))
 
-    # Fetch and display user's top 10 tracks
     results = sp.current_user_top_tracks(limit=10, time_range='short_term')
     st.subheader("🎧 Your Top 10 Tracks (Short Term):")
 
@@ -37,4 +38,3 @@ except spotipy.exceptions.SpotifyOauthError as e:
 except Exception as e:
     st.error("🚨 Something went wrong.")
     st.code(str(e))
-
