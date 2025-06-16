@@ -32,11 +32,11 @@ if not code:
 
 try:
     st.write("Attempting to get access token...")
-    token_info = auth_manager.get_access_token(code)
+    access_token = auth_manager.get_access_token(code, as_dict=False)
     st.success("Access token received!")
-    st.code(token_info)  # Debug: show full token info
+    st.code(access_token)
 
-    sp = spotipy.Spotify(auth=token_info["access_token"])
+    sp = spotipy.Spotify(auth=access_token)
     st.success("Spotify client initialized!")
 
     user = sp.current_user()
