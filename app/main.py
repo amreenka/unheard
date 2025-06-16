@@ -20,8 +20,7 @@ auth_manager = SpotifyOAuth(
 )
 
 # Get code from query params (no parentheses!)
-query_params = st.query_params
-code = query_params.get("code", [None])[0]
+code = st.query_params.get("code", [None])[0]
 
 if not code:
     auth_url = auth_manager.get_authorize_url()
