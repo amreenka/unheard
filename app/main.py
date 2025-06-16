@@ -19,9 +19,9 @@ auth_manager = SpotifyOAuth(
     show_dialog=True,
 )
 
-# Get query params the RIGHT way
-query_params = st.experimental_get_query_params()
-code = query_params.get("code", [None])[0]
+# Safely get Spotify code from query params
+query_params = st.query_params
+code = query_params.get("code", [None])[0] if "code" in query_params else None
 
 if not code:
     auth_url = auth_manager.get_authorize_url()
@@ -34,7 +34,8 @@ try:
 
     user = sp.current_user()
     st.success(f"Logged in as {user['display_name']}")
-    st.image(user["images"][0]["url"], width=150)
+    if user.get("images"):
+        st.image(user["images"][0]["url"], width=150)
 
     st.subheader("🎧 Your Top 10 Tracks:")
     top_tracks = sp.current_user_top_tracks(limit=10)
@@ -47,5 +48,4 @@ try:
 except Exception as e:
     st.error("⚠️ Spotify login failed or token invalid.")
     st.code(str(e))
-    st.stop()
 
